@@ -33,7 +33,7 @@ impl<E> From<Infallible> for BufTooShortOr<E> {
 impl<E: Display> Display for BufTooShortOr<E> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::TooShort => write!(f, "{}", BufTooShort),
+            Self::TooShort => write!(f, "{BufTooShort}"),
             Self::Or(err) => write!(f, "{err}"),
         }
     }

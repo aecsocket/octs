@@ -1,8 +1,8 @@
 use core::{
     convert::Infallible,
     num::{
-        NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize, NonZeroU128,
-        NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize,
+        NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize, NonZeroU16, NonZeroU32,
+        NonZeroU64, NonZeroU8, NonZeroUsize,
     },
 };
 
@@ -48,9 +48,9 @@ impl_nz!(NonZeroI32, i32);
 impl_nz!(NonZeroU64, u64);
 impl_nz!(NonZeroI64, i64);
 #[cfg(feature = "i128")]
-impl_nz!(NonZeroU128, u128);
+impl_nz!(core::num::NonZeroU128, u128);
 #[cfg(feature = "i128")]
-impl_nz!(NonZeroI128, i128);
+impl_nz!(core::num::NonZeroI128, i128);
 
 macro_rules! impl_nz_opt {
     ($nz:ty, $base:ty) => {
@@ -90,6 +90,6 @@ impl_nz_opt!(NonZeroI32, i32);
 impl_nz_opt!(NonZeroU64, u64);
 impl_nz_opt!(NonZeroI64, i64);
 #[cfg(feature = "i128")]
-impl_nz_opt!(NonZeroU128, u128);
+impl_nz_opt!(core::num::NonZeroU128, u128);
 #[cfg(feature = "i128")]
-impl_nz_opt!(NonZeroI128, i128);
+impl_nz_opt!(core::num::NonZeroI128, i128);
