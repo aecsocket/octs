@@ -1,9 +1,15 @@
 [package]
-name = "octs"
 description = "Good byte manipulation library"
-
+name = "octs"
 version = "0.1.0"
+
+authors = ["aecsocket <aecsocket@tutanota.com>"]
+categories = ["network-programming", "data-structures"]
 edition = "2021"
+keywords = ["network", "bytes", "io"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/aecsocket/octs"
+rust-version = "1.76.0"
 
 [lints.rust]
 # missing_docs = "warn"
