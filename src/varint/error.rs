@@ -1,7 +1,17 @@
-use core::{convert::Infallible, fmt::Display};
+use core::fmt::Display;
 
-use crate::BufTooShortOr;
+use crate::BufError;
 
+/// Attempted to read a [`VarInt`] from a buffer, but the resulting integer
+/// would have been too large to fit into this [`VarInt`].
+///
+/// When reading a byte of a [`VarInt`], the MSB being set indicates that there
+/// is more data left in the integer. If we are decoding e.g. a `VarInt<u32>`,
+/// and we read 5 bytes all with their MSB set, then we've read `7 * 5 = 35`
+/// bits of actual integer data, and still haven't reached the end of this
+/// (supposed) [`u32`], so we abort with this error.
+///
+/// [`VarInt`]: crate::VarInt
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VarIntTooLarge;
 
@@ -11,20 +21,7 @@ impl Display for VarIntTooLarge {
     }
 }
 
-impl From<VarIntTooLarge> for BufTooShortOr<VarIntTooLarge> {
-    fn from(value: VarIntTooLarge) -> Self {
-        Self::Or(value)
-    }
-}
-
-impl From<BufTooShortOr<Infallible>> for BufTooShortOr<VarIntTooLarge> {
-    fn from(value: BufTooShortOr<Infallible>) -> Self {
-        match value {
-            BufTooShortOr::TooShort => Self::TooShort,
-            BufTooShortOr::Or(_) => unreachable!(),
-        }
-    }
-}
+impl BufError for VarIntTooLarge {}
 
 #[cfg(feature = "std")]
 impl std::error::Error for VarIntTooLarge {}

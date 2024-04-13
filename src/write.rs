@@ -1,13 +1,36 @@
-use bytes::Buf;
+use bytes::{Buf, BufMut};
 
 use crate::{BufTooShort, BufTooShortOr};
 
-pub trait Write {
-    #[must_use]
-    fn rem_mut(&self) -> usize;
+/// Allows writing bytes into a buffer.
+///
+/// This is effectively a thin wrapper around a [`BufMut`] to add fallible
+/// operations. See [`BufMut`]'s documentation for more details.
+pub trait Write: BufMut {
+    /// Attempts to write into this buffer from `src`.
+    ///
+    /// # Errors
+    ///
+    /// Errors if `src` has more bytes than `self` has room for.
+    #[inline]
+    fn write_from(&mut self, src: impl Buf) -> Result<(), BufTooShort>
+    where
+        Self: Sized,
+    {
+        if self.remaining_mut() >= src.remaining() {
+            self.put(src);
+            Ok(())
+        } else {
+            Err(BufTooShort)
+        }
+    }
 
-    fn write_from(&mut self, src: impl Buf) -> Result<(), BufTooShort>;
-
+    /// Attempts to write a `T` into the next bytes in the buffer.
+    ///
+    /// # Errors
+    ///
+    /// Errors if there are not enough bytes in this buffer left for writing
+    /// into, or if `value` could not be encoded into bytes.
     #[inline]
     fn write<T: Encode>(&mut self, value: T) -> Result<(), BufTooShortOr<T::Error>>
     where
@@ -16,6 +39,7 @@ pub trait Write {
         value.encode(self)
     }
 
+    /// Wraps this value so that it can be used as a [`std::io::Write`].
     #[cfg(feature = "std")]
     #[inline]
     fn writer(self) -> crate::std_io::Writer<Self>
@@ -26,9 +50,20 @@ pub trait Write {
     }
 }
 
+impl<T: BufMut> Write for T {}
+
+/// Allows writing a value of this type into a [`Write`].
 pub trait Encode {
+    /// Error type of [`Encode::encode`], excluding [`BufTooShort`] errors.
     type Error;
 
+    /// Attempts to encode a value of this type into a [`Write`].
+    ///
+    /// # Errors
+    ///
+    /// If there are not enough bytes left for writing into,
+    /// [`BufTooShortOr::TooShort`] is returned. Otherwise, it is up to the
+    /// implementation on what the returned error represents.
     fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>>;
 }
 
@@ -40,24 +75,41 @@ impl<T: Encode + ?Sized> Encode for &T {
     }
 }
 
+/// Gets how many bytes it takes to encode a value of this type.
 pub trait EncodeLen {
+    /// Gets how many bytes it takes to encode this value into a [`Write`].
+    ///
+    /// If you attempt to [`Encode::encode`] this value into a
+    ///
     fn encode_len(&self) -> usize;
 }
 
-pub trait MaxEncodeLen {
+/// Provides hints on how many bytes it may take to encode a value of this type.
+pub trait FixedEncodeLenHint: EncodeLen {
+    /// Inclusive minimum value that [`EncodeLen::encode_len`] may be.
+    const MIN_ENCODE_LEN: usize;
+
+    /// Inclusive maximum value that [`EncodeLen::encode_len`] may be.
     const MAX_ENCODE_LEN: usize;
 }
 
+/// Defines exactly how many bytes it will take to encode a value of this type.
 pub trait FixedEncodeLen {
+    /// How many bytes it takes to encode a value of this type.
+    ///
+    /// This is the value that [`EncodeLen::encode_len`] will always return for
+    /// this type.
     const ENCODE_LEN: usize;
+}
+
+impl<T: FixedEncodeLen> FixedEncodeLenHint for T {
+    const MIN_ENCODE_LEN: usize = Self::ENCODE_LEN;
+
+    const MAX_ENCODE_LEN: usize = Self::ENCODE_LEN;
 }
 
 impl<T: FixedEncodeLen> EncodeLen for T {
     fn encode_len(&self) -> usize {
         Self::ENCODE_LEN
     }
-}
-
-impl<T: FixedEncodeLen> MaxEncodeLen for T {
-    const MAX_ENCODE_LEN: usize = Self::ENCODE_LEN;
 }

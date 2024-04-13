@@ -22,7 +22,7 @@ macro_rules! impl_nz {
             #[inline]
             fn decode(src: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
                 let value = <$base>::decode(src)?;
-                <$nz>::new(value).ok_or(InvalidValue.into())
+                <$nz>::new(value).ok_or(InvalidValue(()).into())
             }
         }
 
@@ -59,7 +59,7 @@ macro_rules! impl_nz_opt {
         }
 
         impl Decode for Option<$nz> {
-            type Error = InvalidValue;
+            type Error = Infallible;
 
             #[inline]
             fn decode(src: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {

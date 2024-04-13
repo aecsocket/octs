@@ -2,10 +2,12 @@
 #![doc = include_str!("../README.md")]
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub use bytes::{self, Buf, BufMut, Bytes, BytesMut};
+
 pub mod prim;
 
 mod error;
-mod impl_bytes;
+// mod impl_bytes;
 mod read;
 mod varint;
 mod write;
@@ -13,4 +15,4 @@ mod write;
 #[cfg(feature = "std")]
 mod std_io;
 
-pub use {error::*, read::*, varint::*, write::*};
+pub use {error::*, read::*, std_io::*, varint::*, write::*};

@@ -1,11 +1,17 @@
 use core::convert::Infallible;
 
-use crate::{BufTooShortOr, Decode, Encode, MaxEncodeLen, Read, Write};
+use crate::{BufTooShortOr, Decode, Encode, EncodeLen, FixedEncodeLenHint, Read, Write};
 
 mod error;
 
 pub use error::*;
 
+/// Integer which is encoded in a variable amount of bytes.
+///
+/// See the [*Protocol Buffers Documentation*] on an explanation of what
+/// varints are, and how they are encoded.
+///
+/// [*Protocol Buffers Documentation*]: https://protobuf.dev/programming-guides/encoding/#varints
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct VarInt<T>(pub T);
 
@@ -23,9 +29,26 @@ macro_rules! impl_u {
             }
         }
 
-        impl MaxEncodeLen for VarInt<$ty> {
+        impl FixedEncodeLenHint for VarInt<$ty> {
+            const MIN_ENCODE_LEN: usize = 1;
+
             const MAX_ENCODE_LEN: usize =
                 ((std::mem::size_of::<$ty>() * 8 + 7 - 1) as f64 / 7f64) as usize;
+        }
+
+        impl EncodeLen for VarInt<$ty> {
+            fn encode_len(&self) -> usize {
+                let mut v = self.0;
+                if v == 0 {
+                    return 1;
+                }
+                let mut len = 0;
+                while v > 0 {
+                    len += 1;
+                    v >>= 7;
+                }
+                len
+            }
         }
 
         impl Decode for VarInt<$ty> {
