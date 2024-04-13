@@ -32,25 +32,16 @@ impl Encode for bool {
 
 #[cfg(test)]
 mod tests {
-    use bytes::BytesMut;
-
     use super::*;
-
-    fn round_trip(value: bool) {
-        let mut buf = BytesMut::new();
-        buf.write(value).unwrap();
-        let mut buf = buf.freeze();
-        assert_eq!(value, buf.read::<bool>().unwrap());
-    }
 
     #[test]
     fn round_trip_false() {
-        round_trip(false);
+        crate::__test::round_trip(false);
     }
 
     #[test]
     fn round_trip_true() {
-        round_trip(true);
+        crate::__test::round_trip(true);
     }
 
     #[test]

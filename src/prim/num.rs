@@ -46,3 +46,37 @@ impl_for!(i128);
 
 impl_for!(f32);
 impl_for!(f64);
+
+#[cfg(test)]
+mod tests {
+    macro_rules! round_trip {
+        ($ty:ty) => {
+            crate::__test::round_trip(<$ty>::MIN);
+            crate::__test::round_trip(0 as $ty);
+            crate::__test::round_trip(1 as $ty);
+            crate::__test::round_trip(2 as $ty);
+            crate::__test::round_trip(<$ty>::MAX);
+        };
+    }
+
+    #[test]
+    fn round_trip() {
+        round_trip!(usize);
+        round_trip!(isize);
+        round_trip!(u8);
+        round_trip!(i8);
+        round_trip!(u16);
+        round_trip!(i16);
+        round_trip!(u32);
+        round_trip!(i32);
+        round_trip!(u64);
+        round_trip!(i64);
+        #[cfg(feature = "i128")]
+        round_trip!(u128);
+        #[cfg(feature = "i128")]
+        round_trip!(i128);
+
+        round_trip!(f32);
+        round_trip!(f64);
+    }
+}

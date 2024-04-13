@@ -21,3 +21,11 @@ impl Encode for () {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn round_trip() {
+        crate::__test::round_trip(());
+    }
+}

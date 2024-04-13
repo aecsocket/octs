@@ -1,4 +1,4 @@
-use core::convert::Infallible;
+use core::{convert::Infallible, mem::size_of};
 
 use crate::{BufTooShortOr, Decode, Encode, EncodeLen, FixedEncodeLenHint, Read, Write};
 
@@ -32,22 +32,19 @@ macro_rules! impl_u {
         impl FixedEncodeLenHint for VarInt<$ty> {
             const MIN_ENCODE_LEN: usize = 1;
 
-            const MAX_ENCODE_LEN: usize =
-                ((std::mem::size_of::<$ty>() * 8 + 7 - 1) as f64 / 7f64) as usize;
+            const MAX_ENCODE_LEN: usize = (size_of::<$ty>() * 8 + 7) / 7;
         }
 
         impl EncodeLen for VarInt<$ty> {
             fn encode_len(&self) -> usize {
                 let mut v = self.0;
-                if v == 0 {
-                    return 1;
-                }
                 let mut len = 0;
                 while v > 0 {
                     len += 1;
                     v >>= 7;
                 }
-                len
+                // encoded len is always at least 1
+                len.max(1)
             }
         }
 
@@ -75,7 +72,8 @@ macro_rules! impl_u {
             fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
                 let mut n = self.0;
                 while n >= 0x80 {
-                    dst.write(0b1000_000 | (n as u8))?;
+                    let b: u8 = 0b1000_000 | (n as u8);
+                    dst.write(b)?;
                     n >>= 7;
                 }
                 dst.write(n as u8)?;
@@ -85,10 +83,43 @@ macro_rules! impl_u {
     };
 }
 
+const _: () = assert!(size_of::<usize>() <= size_of::<u64>());
+
 impl_u!(usize);
 impl_u!(u8);
 impl_u!(u16);
 impl_u!(u32);
 impl_u!(u64);
-#[cfg(feature = "i128")]
-impl_u!(u128);
+
+// signed
+
+#[inline]
+fn zigzag_encode(v: i64) -> u64 {
+    ((v << 1) ^ (v >> 63)) as u64
+}
+
+#[inline]
+fn zigzag_decode(v: u64) -> i64 {
+    ((v >> 1) ^ (-((v & 1) as i64)) as u64) as i64
+}
+
+// TODO
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn round_trip_all_u8s() {
+        for v in 0..u8::MAX {
+            crate::__test::round_trip(VarInt(v));
+        }
+    }
+
+    #[test]
+    fn round_trip_all_u16s() {
+        for v in 0..u16::MAX {
+            crate::__test::round_trip(VarInt(v));
+        }
+    }
+}

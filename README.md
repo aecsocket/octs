@@ -36,21 +36,21 @@ use octs::{Read, Write, VarInt, Buf};
 
 fn handle_packet(mut buf: octs::Bytes) -> Result<(), octs::BufTooShort> {
     //                    ^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^
-    //                    |                          | the main error type you'll deal with
+    //                    |                      the main error type |
     //                    | `octs` re-exports the core `bytes` types
 
     let packet_id = buf.read::<u16>()?;
     let timestamp = buf.read::<u64>()?;
-    //                               ^
-    //                               | just use `?` for error handling,
-    //                               | no panics!
+    // just use ? for error handling ^
+    //                    no panics! |
 
     let body = match buf.read::<PacketBody>() {
         //               ^^^^^^^^^^^^^^^^^^
         //               | `read` your own types in directly -
         //               | they are just as important as `u8` or `u16`
-        // and if you need some custom error handling apart from "buffer too
-        // short", we've got you covered:
+        // and if you need some custom error handling
+        // outside of "buffer too short",
+        // we've got you covered
         Ok(body) => body,
         Err(octs::BufTooShortOr::TooShort) => return Err(octs::BufTooShort),
         Err(octs::BufTooShortOr::Or(err)) => {
@@ -113,6 +113,7 @@ impl octs::Encode for PacketBody {
   trait, and the cheaply-cloneable [`bytes::Bytes`] type.
 * [`octets`] - general API style, and having varints be a core part of the API
 * [`safer-bytes`] - making a good version of the [`bytes`] API
+* [`integer-encoding`] - implementations of varint encode/decode
 
 [`octs::Read`]: Read
 [`octs::Write`]: Write
