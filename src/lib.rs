@@ -9,6 +9,7 @@ mod read;
 mod varint;
 mod write;
 
+pub mod chunks;
 pub mod prim;
 #[cfg(feature = "std")]
 pub mod std_io;
