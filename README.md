@@ -25,12 +25,14 @@ This crate builds on top of the types defined by [`bytes`] by replacing its pani
 * **Dedicated varints** - one of the staples of networking primitives is implemented here, without
   needing any extensions. Just `read` or `write` a [`VarInt`] as you would any other value.
 
-* `#![no_std]` - just like [`bytes`], but it still requires `alloc`
+* **Zero unsafe** - I'm not smart enough to write unsafe code.
+
+* `#![no_std]` - just like [`bytes`], but it still requires `alloc`.
 
 ```rust
 use core::num::NonZeroU16;
 
-use octs::{Read, Write, VarInt};
+use octs::{Read, Write, VarInt, Buf};
 
 fn handle_packet(mut buf: octs::Bytes) -> Result<(), octs::BufTooShort> {
     //                    ^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^
@@ -99,9 +101,7 @@ impl octs::Encode for PacketBody {
 
     fn encode(&self, dst: &mut impl Write) -> Result<(), octs::BufTooShortOr<Self::Error>> {
         dst.write(VarInt(self.payload.len()))?;
-        dst.write_from(&mut self.payload.clone())?;
-        //                              ^^^^^^^^
-        //                              | cheap clone - just increments a ref count
+        dst.write_from(&mut self.payload.chunk())?;
         Ok(())
     }
 }

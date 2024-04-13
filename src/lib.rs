@@ -4,15 +4,13 @@
 
 pub use bytes::{self, Buf, BufMut, Bytes, BytesMut};
 
-pub mod prim;
-
 mod error;
-// mod impl_bytes;
 mod read;
 mod varint;
 mod write;
 
+pub mod prim;
 #[cfg(feature = "std")]
-mod std_io;
+pub mod std_io;
 
-pub use {error::*, read::*, std_io::*, varint::*, write::*};
+pub use {error::*, read::*, varint::*, write::*};

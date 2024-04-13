@@ -79,8 +79,8 @@ impl<T: Encode + ?Sized> Encode for &T {
 pub trait EncodeLen {
     /// Gets how many bytes it takes to encode this value into a [`Write`].
     ///
-    /// If you attempt to [`Encode::encode`] this value into a
-    ///
+    /// If this function returns `n`, then if you [`Encode::encode`] this value
+    /// into a buffer, it is guaranteed that `n` bytes will be consumed.
     fn encode_len(&self) -> usize;
 }
 
