@@ -11,6 +11,10 @@ use core::{convert::Infallible, fmt::Display};
 /// values (notably [`Bytes`]) may allow writing a [`usize::MAX`] number of
 /// bytes by reallocating their internal buffer, and therefore will never return
 /// this error.
+///
+/// [`Read`]: crate::Read
+/// [`Write`]: crate::Write
+/// [`Bytes`]: bytes::Bytes
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BufTooShort;
 
