@@ -1,31 +1,44 @@
-use crate::BufferTooShort;
+use bytes::Bytes;
+
+use crate::{BufTooShort, BufTooShortOr};
 
 pub trait Read {
     #[must_use]
-    fn chunk(&self) -> &[u8];
+    fn rem(&self) -> usize;
 
     #[must_use]
-    fn rem(&self) -> usize {
-        self.chunk().len()
-    }
+    fn chunk(&self) -> &[u8];
+
+    fn advance(&mut self, n: usize) -> Result<(), BufTooShort>;
+
+    fn read_next(&mut self, n: usize) -> Result<Bytes, BufTooShort>;
 
     #[inline]
-    fn read_next(&mut self, n: usize) -> Result<&[u8], BufferTooShort> {
-        let chunk = (*self).chunk();
-        if chunk.len() < n {
-            return Err(BufferTooShort);
+    fn read_exact<const N: usize>(&mut self) -> Result<[u8; N], BufTooShort> {
+        // if we can read N items of the next chunk contiguously, try to do so
+        if let Some(array) = self.chunk().first_chunk::<N>() {
+            let array = *array;
+            self.advance(N).expect("we just read N bytes");
+            return Ok(array);
         }
-        Ok(&chunk[..n])
+        // else we have to buffer the bytes up, and return this temp buf
+        if self.rem() < N {
+            return Err(BufTooShort);
+        }
+        let mut buf = [0u8; N];
+        let mut i = 0;
+        while i < N {
+            let chunk = self.chunk();
+            let to_copy = chunk.len().min(N - i);
+            buf[i..(i + to_copy)].copy_from_slice(&chunk[..to_copy]);
+            i += to_copy;
+            self.advance(to_copy)?;
+        }
+        Ok(buf)
     }
 
     #[inline]
-    fn read_exact<const N: usize>(&mut self) -> Result<&[u8; N], BufferTooShort> {
-        let next = self.read_next(N)?;
-        Ok(<&[u8; N]>::try_from(next).expect("slice should be N bytes long"))
-    }
-
-    #[inline]
-    fn read<T: Decode>(&mut self) -> Result<T, T::Error>
+    fn read<T: Decode>(&mut self) -> Result<T, BufTooShortOr<T::Error>>
     where
         Self: Sized,
     {
@@ -42,15 +55,8 @@ pub trait Read {
     }
 }
 
-impl<T: Read + ?Sized> Read for &mut T {
-    #[inline]
-    fn chunk(&self) -> &[u8] {
-        (**self).chunk()
-    }
-}
-
 pub trait Decode: Sized {
     type Error;
 
-    fn decode(src: impl Read) -> Result<Self, Self::Error>;
+    fn decode(src: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>>;
 }

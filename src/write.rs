@@ -1,11 +1,15 @@
+use bytes::Buf;
+
+use crate::{BufTooShort, BufTooShortOr};
+
 pub trait Write {
     #[must_use]
     fn rem_mut(&self) -> usize;
 
-    fn write_slice(&mut self, src: &[u8]) -> Result<()>;
+    fn write_from(&mut self, src: impl Buf) -> Result<(), BufTooShort>;
 
     #[inline]
-    fn write<T: Encode>(&mut self, value: &T) -> Result<()>
+    fn write<T: Encode>(&mut self, value: T) -> Result<(), BufTooShortOr<T::Error>>
     where
         Self: Sized,
     {
@@ -22,32 +26,38 @@ pub trait Write {
     }
 }
 
-impl<T: Write + ?Sized> Write for &mut T {
-    #[inline]
-    fn rem_mut(&self) -> usize {
-        (**self).rem_mut()
-    }
+pub trait Encode {
+    type Error;
 
-    #[inline]
-    fn write_slice(&mut self, src: &[u8]) -> Result<()> {
-        (**self).write_slice(src)
-    }
+    fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>>;
 }
 
-pub trait Encode {
-    fn encode(&self, dst: impl Write) -> Result<()>;
+impl<T: Encode + ?Sized> Encode for &T {
+    type Error = T::Error;
+
+    fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
+        (**self).encode(dst)
+    }
 }
 
 pub trait EncodeLen {
     fn encode_len(&self) -> usize;
 }
 
-pub trait ConstEncodeLen {
+pub trait MaxEncodeLen {
+    const MAX_ENCODE_LEN: usize;
+}
+
+pub trait FixedEncodeLen {
     const ENCODE_LEN: usize;
 }
 
-impl<T: ConstEncodeLen> EncodeLen for T {
+impl<T: FixedEncodeLen> EncodeLen for T {
     fn encode_len(&self) -> usize {
         Self::ENCODE_LEN
     }
+}
+
+impl<T: FixedEncodeLen> MaxEncodeLen for T {
+    const MAX_ENCODE_LEN: usize = Self::ENCODE_LEN;
 }

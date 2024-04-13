@@ -1,16 +1,19 @@
-use crate::{BufferTooShortOr, ConstEncodeLen, Decode, Encode, Read, Write};
+use core::convert::Infallible;
+
+use crate::{BufTooShortOr, Decode, Encode, FixedEncodeLen, Read, Write};
 
 use super::InvalidValue;
 
-impl ConstEncodeLen for bool {
+impl FixedEncodeLen for bool {
     const ENCODE_LEN: usize = 1;
 }
 
 impl Decode for bool {
-    type Error = BufferTooShortOr<InvalidValue>;
+    type Error = InvalidValue;
 
-    fn decode(mut buf: impl Read) -> Result<Self, Self::Error> {
-        match buf.read_exact::<1>()? {
+    #[inline]
+    fn decode(src: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
+        match src.read_exact::<1>()? {
             [0] => Ok(false),
             [1] => Ok(true),
             [_] => Err(InvalidValue.into()),
@@ -19,7 +22,10 @@ impl Decode for bool {
 }
 
 impl Encode for bool {
-    fn encode(&self, mut buf: impl Write) -> Result<()> {
-        buf.write(if *self { &1u8 } else { &0u8 })
+    type Error = Infallible;
+
+    #[inline]
+    fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
+        dst.write(&u8::from(*self))
     }
 }

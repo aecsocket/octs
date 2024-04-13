@@ -1,27 +1,23 @@
-mod bool;
-mod nonzero;
-mod num;
-
 use core::{convert::Infallible, fmt::Display};
 
 use crate::BufTooShortOr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct InvalidValue;
+pub struct VarIntTooLarge;
 
-impl Display for InvalidValue {
+impl Display for VarIntTooLarge {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "invalid value")
+        write!(f, "varint too large")
     }
 }
 
-impl From<InvalidValue> for BufTooShortOr<InvalidValue> {
-    fn from(value: InvalidValue) -> Self {
+impl From<VarIntTooLarge> for BufTooShortOr<VarIntTooLarge> {
+    fn from(value: VarIntTooLarge) -> Self {
         Self::Or(value)
     }
 }
 
-impl From<BufTooShortOr<Infallible>> for BufTooShortOr<InvalidValue> {
+impl From<BufTooShortOr<Infallible>> for BufTooShortOr<VarIntTooLarge> {
     fn from(value: BufTooShortOr<Infallible>) -> Self {
         match value {
             BufTooShortOr::TooShort => Self::TooShort,
@@ -31,4 +27,4 @@ impl From<BufTooShortOr<Infallible>> for BufTooShortOr<InvalidValue> {
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for InvalidValue {}
+impl std::error::Error for VarIntTooLarge {}

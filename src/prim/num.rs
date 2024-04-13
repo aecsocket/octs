@@ -1,52 +1,48 @@
-use core::{
-    fmt::Display,
-    num::{
-        NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroU128, NonZeroU16,
-        NonZeroU32, NonZeroU64, NonZeroU8,
-    },
-};
+use core::convert::Infallible;
 
-use crate::{BufferTooShort, BufferTooShortOr, ConstEncodeLen, Decode, Encode, Read, Write};
+use crate::{BufTooShortOr, Decode, Encode, FixedEncodeLen, Read, Write};
 
-use super::InvalidValue;
-
-macro_rules! impl_base {
+macro_rules! impl_for {
     ($ty:ty) => {
-        impl ConstEncodeLen for $ty {
+        impl FixedEncodeLen for $ty {
             const ENCODE_LEN: usize = std::mem::size_of::<$ty>();
         }
 
         impl Decode for $ty {
-            type Error = BufferTooShort;
+            type Error = Infallible;
 
-            fn decode(mut buf: impl Read) -> Result<Self, Self::Error> {
-                Ok(<$ty>::from_be_bytes(*buf.read_exact()?))
+            #[inline]
+            fn decode(src: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
+                Ok(<$ty>::from_be_bytes(src.read_exact()?))
             }
         }
 
         impl Encode for $ty {
-            fn encode(&self, mut buf: impl Write) -> Result<()> {
-                buf.write_slice(&self.to_be_bytes())
+            type Error = Infallible;
+
+            #[inline]
+            fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
+                dst.write_from(&self.to_be_bytes()[..])?;
+                Ok(())
             }
         }
     };
 }
 
-impl_base!(u8);
-impl_base!(i8);
-impl_base!(u16);
-impl_base!(i16);
-impl_base!(u32);
-impl_base!(i32);
-impl_base!(u64);
-impl_base!(i64);
+impl_for!(usize);
+impl_for!(isize);
+impl_for!(u8);
+impl_for!(i8);
+impl_for!(u16);
+impl_for!(i16);
+impl_for!(u32);
+impl_for!(i32);
+impl_for!(u64);
+impl_for!(i64);
 #[cfg(feature = "i128")]
-impl_base!(u128);
+impl_for!(u128);
 #[cfg(feature = "i128")]
-impl_base!(i128);
+impl_for!(i128);
 
-impl_base!(usize);
-impl_base!(isize);
-
-impl_base!(f32);
-impl_base!(f64);
+impl_for!(f32);
+impl_for!(f64);

@@ -49,7 +49,7 @@ impl<T: Write> io::Write for Writer<T> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         let n = self.0.rem_mut().min(buf.len());
         self.0
-            .write_slice(&buf[..n])
+            .write_from(&buf[..n])
             .expect("we only wrote as many bytes as we can fit");
         Ok(n)
     }

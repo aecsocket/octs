@@ -5,9 +5,9 @@
 pub mod prim;
 
 mod error;
-// mod impl_bytes;
+mod impl_bytes;
 mod read;
-// mod varint;
+mod varint;
 mod write;
 
 #[cfg(feature = "std")]

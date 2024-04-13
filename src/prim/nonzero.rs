@@ -1,34 +1,44 @@
-use core::num::{
-    NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroU128, NonZeroU16,
-    NonZeroU32, NonZeroU64, NonZeroU8,
+use core::{
+    convert::Infallible,
+    num::{
+        NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize, NonZeroU128,
+        NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize,
+    },
 };
 
-use crate::{BufferTooShort, BufferTooShortOr, ConstEncodeLen, Decode, Encode, Read, Write};
+use crate::{BufTooShortOr, Decode, Encode, FixedEncodeLen, Read, Write};
 
 use super::InvalidValue;
 
 macro_rules! impl_nz {
     ($nz:ty, $base:ty) => {
-        impl ConstEncodeLen for $nz {
+        impl FixedEncodeLen for $nz {
             const ENCODE_LEN: usize = std::mem::size_of::<$base>();
         }
 
         impl Decode for $nz {
-            type Error = BufferTooShortOr<InvalidValue>;
+            type Error = InvalidValue;
 
-            fn decode(buf: impl Read) -> Result<Self, Self::Error> {
-                <$nz>::new(<$base>::decode(buf)?).ok_or(InvalidValue.into())
+            #[inline]
+            fn decode(src: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
+                let value = <$base>::decode(src)?;
+                <$nz>::new(value).ok_or(InvalidValue.into())
             }
         }
 
         impl Encode for $nz {
-            fn encode(&self, buf: impl Write) -> Result<()> {
-                self.get().encode(buf)
+            type Error = Infallible;
+
+            #[inline]
+            fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
+                self.get().encode(dst)
             }
         }
     };
 }
 
+impl_nz!(NonZeroUsize, usize);
+impl_nz!(NonZeroIsize, isize);
 impl_nz!(NonZeroU8, u8);
 impl_nz!(NonZeroI8, i8);
 impl_nz!(NonZeroU16, u16);
@@ -44,24 +54,33 @@ impl_nz!(NonZeroI128, i128);
 
 macro_rules! impl_nz_opt {
     ($nz:ty, $base:ty) => {
-        impl ConstEncodeLen for Option<$nz> {
+        impl FixedEncodeLen for Option<$nz> {
             const ENCODE_LEN: usize = std::mem::size_of::<$base>();
         }
 
         impl Decode for Option<$nz> {
-            fn decode(buf: impl Read) -> Result<Self> {
-                Ok(<$nz>::new(<$base>::decode(buf)?))
+            type Error = InvalidValue;
+
+            #[inline]
+            fn decode(src: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
+                let value = <$base>::decode(src)?;
+                Ok(<$nz>::new(value))
             }
         }
 
         impl Encode for Option<$nz> {
-            fn encode(&self, buf: impl Write) -> Result<()> {
-                self.map(<$nz>::get).unwrap_or_default().encode(buf)
+            type Error = Infallible;
+
+            #[inline]
+            fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
+                self.map(<$nz>::get).unwrap_or_default().encode(dst)
             }
         }
     };
 }
 
+impl_nz_opt!(NonZeroUsize, usize);
+impl_nz_opt!(NonZeroIsize, isize);
 impl_nz_opt!(NonZeroU8, u8);
 impl_nz_opt!(NonZeroI8, i8);
 impl_nz_opt!(NonZeroU16, u16);
