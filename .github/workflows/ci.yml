@@ -39,7 +39,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy
-      - run: cargo clippy --workspace --no-default-features --features ${{ matrix.features }} -- -Dwarnings
+      - run: cargo clippy --workspace --no-default-features --features '${{ matrix.features }}' -- -Dwarnings
   doc:
     runs-on: ubuntu-latest
     env:
@@ -50,7 +50,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-      - run: cargo doc --workspace --no-default-features --features ${{ matrix.features }}
+      - run: cargo doc --workspace --no-default-features --features '${{ matrix.features }}'
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -59,4 +59,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-      - run: cargo test --workspace --no-default-features --features ${{ matrix.features }}
+      - run: cargo test --workspace --no-default-features --features '${{ matrix.features }}'
