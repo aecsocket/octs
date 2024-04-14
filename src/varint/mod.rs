@@ -15,7 +15,7 @@ pub use error::*;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct VarInt<T>(pub T);
 
-macro_rules! impl_u {
+macro_rules! impl_base {
     ($ty:ty) => {
         impl From<$ty> for VarInt<$ty> {
             fn from(value: $ty) -> Self {
@@ -34,6 +34,12 @@ macro_rules! impl_u {
 
             const MAX_ENCODE_LEN: usize = (size_of::<$ty>() * 8 + 7) / 7;
         }
+    };
+}
+
+macro_rules! impl_unsigned {
+    ($ty:ty) => {
+        impl_base!($ty);
 
         impl EncodeLen for VarInt<$ty> {
             fn encode_len(&self) -> usize {
@@ -72,7 +78,7 @@ macro_rules! impl_u {
             fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
                 let mut n = self.0;
                 while n >= 0x80 {
-                    let b: u8 = 0b1000_000 | (n as u8);
+                    let b: u8 = 0b1000_0000 | (n as u8);
                     dst.write(b)?;
                     n >>= 7;
                 }
@@ -85,28 +91,64 @@ macro_rules! impl_u {
 
 const _: () = assert!(size_of::<usize>() <= size_of::<u64>());
 
-impl_u!(usize);
-impl_u!(u8);
-impl_u!(u16);
-impl_u!(u32);
-impl_u!(u64);
+impl_unsigned!(usize);
+impl_unsigned!(u8);
+impl_unsigned!(u16);
+impl_unsigned!(u32);
+impl_unsigned!(u64);
 
 // signed
 
-#[inline]
-fn zigzag_encode(v: i64) -> u64 {
-    ((v << 1) ^ (v >> 63)) as u64
+macro_rules! impl_signed {
+    ($ty:ty, $un:ty) => {
+        impl_base!($ty);
+
+        impl VarInt<$ty> {
+            fn zigzag_encode(v: $ty) -> $un {
+                const BITS: usize = size_of::<$ty>() * 8;
+                ((v << 1) ^ (v >> (BITS - 1))) as $un
+            }
+
+            fn zigzag_decode(v: $un) -> $ty {
+                ((v >> 1) ^ (-((v & 1) as $ty)) as $un) as $ty
+            }
+        }
+
+        impl EncodeLen for VarInt<$ty> {
+            fn encode_len(&self) -> usize {
+                VarInt(Self::zigzag_encode(self.0)).encode_len()
+            }
+        }
+
+        impl Decode for VarInt<$ty> {
+            type Error = VarIntTooLarge;
+
+            fn decode(buf: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
+                let VarInt(value) = buf.read::<VarInt<$un>>()?;
+                Ok(VarInt(Self::zigzag_decode(value)))
+            }
+        }
+
+        impl Encode for VarInt<$ty> {
+            type Error = Infallible;
+
+            fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
+                VarInt(Self::zigzag_encode(self.0)).encode(dst)
+            }
+        }
+    };
 }
 
-#[inline]
-fn zigzag_decode(v: u64) -> i64 {
-    ((v >> 1) ^ (-((v & 1) as i64)) as u64) as i64
-}
-
-// TODO
+impl_signed!(isize, usize);
+impl_signed!(i8, u8);
+impl_signed!(i16, u16);
+impl_signed!(i32, u32);
+impl_signed!(i64, u64);
 
 #[cfg(test)]
 mod tests {
+    use bytes::{Buf, Bytes};
+
     use super::*;
 
     #[test]
@@ -117,9 +159,32 @@ mod tests {
     }
 
     #[test]
+    fn round_trip_all_i8s() {
+        for v in 0..i8::MAX {
+            crate::__test::round_trip(VarInt(v));
+        }
+    }
+
+    #[test]
     fn round_trip_all_u16s() {
         for v in 0..u16::MAX {
             crate::__test::round_trip(VarInt(v));
         }
+    }
+
+    #[test]
+    fn round_trip_all_i16s() {
+        for v in 0..i16::MAX {
+            crate::__test::round_trip(VarInt(v));
+        }
+    }
+
+    #[test]
+    fn decode_all_msbs() {
+        let len = 64;
+        let mut buf = Bytes::from(vec![0x80; len]);
+        buf.read::<VarInt<u8>>().unwrap_err();
+        // make sure it doesn't try to read the entire buffer
+        assert_eq!(62, buf.remaining());
     }
 }
