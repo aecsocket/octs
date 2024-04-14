@@ -86,7 +86,7 @@ pub trait Read: Buf {
     }
 }
 
-impl<T: Buf> Read for T {}
+impl<T: Buf + ?Sized> Read for T {}
 
 /// Allows reading a value of this type from a [`Read`].
 pub trait Decode: Sized {

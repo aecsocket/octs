@@ -40,7 +40,7 @@ pub trait Write: BufMut {
     }
 }
 
-impl<T: BufMut> Write for T {}
+impl<T: BufMut + ?Sized> Write for T {}
 
 /// Allows writing a value of this type into a [`Write`].
 pub trait Encode {

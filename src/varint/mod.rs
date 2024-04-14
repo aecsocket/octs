@@ -147,7 +147,7 @@ impl_signed!(i64, u64);
 
 #[cfg(test)]
 mod tests {
-    use bytes::{Buf, Bytes};
+    use bytes::Buf;
 
     use super::*;
 
@@ -181,10 +181,10 @@ mod tests {
 
     #[test]
     fn decode_all_msbs() {
-        let len = 64;
-        let mut buf = Bytes::from(std::vec![0x80; len]);
+        const LEN: usize = 64;
+        let mut buf = &[0x80; LEN][..];
         buf.read::<VarInt<u8>>().unwrap_err();
         // make sure it doesn't try to read the entire buffer
-        assert_eq!(62, buf.remaining());
+        assert_eq!(LEN - VarInt::<u8>::MAX_ENCODE_LEN, buf.remaining());
     }
 }
