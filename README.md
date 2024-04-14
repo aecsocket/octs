@@ -95,13 +95,15 @@ impl Decode for Fragment {
     type Error = FragmentError;
 
     fn decode(buf: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
-        let num_frags = buf.read::<NonZeroU8>()
+        let num_frags = buf
+            .read::<NonZeroU8>()
             .map_err(|e| e.map_or(|_| FragmentError::InvalidNumFrags))?;
         // +--------------^^^^^^^
         // | map the `Invalidvalue` error of reading
         // | a `NonZeroU8` to your own error value
 
-        let VarInt(payload_len) = buf.read::<VarInt<usize>>()
+        let VarInt(payload_len) = buf
+            .read::<VarInt<usize>>()
             .map_err(|e| e.map_or(|_| FragmentError::PayloadTooLarge))?;
 
         let payload = buf.read_next(payload_len)?;
