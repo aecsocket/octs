@@ -32,7 +32,7 @@ macro_rules! impl_base {
         impl FixedEncodeLenHint for VarInt<$ty> {
             const MIN_ENCODE_LEN: usize = 1;
 
-            const MAX_ENCODE_LEN: usize = (size_of::<$ty>() * 8 + 7) / 7;
+            const MAX_ENCODE_LEN: usize = (<$ty>::BITS as usize + 7) / 7;
         }
     };
 }
@@ -105,7 +105,7 @@ macro_rules! impl_signed {
 
         impl VarInt<$ty> {
             fn zigzag_encode(v: $ty) -> $un {
-                const BITS: usize = size_of::<$ty>() * 8;
+                const BITS: u32 = <$ty>::BITS;
                 ((v << 1) ^ (v >> (BITS - 1))) as $un
             }
 
