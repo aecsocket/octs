@@ -1,6 +1,9 @@
 #![cfg_attr(any(nightly, docsrs), feature(doc_cfg, doc_auto_cfg))]
 #![doc = include_str!("../README.md")]
-#![cfg_attr(not(feature = "std"), no_std)]
+#![no_std]
+
+#[cfg(feature = "std")]
+extern crate std;
 
 pub use bytes::{self, Buf, BufMut, Bytes, BytesMut};
 
@@ -11,8 +14,6 @@ mod write;
 
 pub mod chunks;
 pub mod prim;
-#[cfg(feature = "std")]
-pub mod std_io;
 
 pub use {error::*, read::*, varint::*, write::*};
 

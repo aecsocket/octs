@@ -29,82 +29,93 @@ This crate builds on top of the types defined by [`bytes`] by replacing its pani
 
 * `#![no_std]` - just like [`bytes`], but it still requires `alloc`.
 
+## Examples
+
+### Writing
+
 ```rust
-use core::num::NonZeroU16;
+use octs::{Read, Write, VarInt};
 
-use octs::{Read, Write, VarInt, Buf};
+fn write_packet(
+    mut buf: octs::BytesMut,
+    //       ^^^^^^^^^^^^^^
+    //       | re-exports the core `bytes` types
+    packet_id: u16,
+    timestamp: u64,
+    payload: &[u8],
+) -> Result<(), octs::BufTooShort> {
+    //          ^^^^^^^^^^^^^^^^^
+    //          | the main error type
+    buf.write(packet_id)?;
+    //  ^^^^^
+    //  | one `write` function for all your types
 
-fn handle_packet(mut buf: octs::Bytes) -> Result<(), octs::BufTooShort> {
-    //                    ^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^
-    //                    |                      the main error type |
-    //                    | `octs` re-exports the core `bytes` types
+    buf.write(timestamp)?;
+    //  +---------------^
+    //  | just use ? for errors
+    //  | no panics
 
-    let packet_id = buf.read::<u16>()?;
-    let timestamp = buf.read::<u64>()?;
-    // just use ? for error handling ^
-    //                    no panics! |
+    buf.write(VarInt(payload.len()))?;
+    //       ^^^^^^^
+    //       | inbuilt support for varints
+    //       | using the Protocol Buffers spec
 
-    let body = match buf.read::<PacketBody>() {
-        //               ^^^^^^^^^^^^^^^^^^
-        //               | `read` your own types in directly -
-        //               | they are just as important as `u8` or `u16`
-        // and if you need some custom error handling
-        // outside of "buffer too short",
-        // we've got you covered
-        Ok(body) => body,
-        Err(octs::BufTooShortOr::TooShort) => return Err(octs::BufTooShort),
-        Err(octs::BufTooShortOr::Or(err)) => {
-            // please don't actually panic in real code; this is just so we
-            // don't have to return a value from this `match`
-            panic!("invalid packet received: {err:?}");
-        }
-    };
+    buf.write_from(payload)?;
+    //  ^^^^^^^^^^
+    //  | copy from an existing buffer 
 
     Ok(())
 }
+```
 
-struct PacketBody {
-    payload: octs::Bytes,
-}
+### Reading
 
-// define your own error type for operations
+```rust
+use core::num::NonZeroU8;
+
+use octs::{Bytes, BufError, Decode, Read, BufTooShortOr, VarInt};
+
 #[derive(Debug)]
-enum InvalidPacketError {
-    LengthTooLarge(octs::VarIntTooLarge),
+struct Fragment {
+    num_frags: NonZeroU8,
+    payload: Bytes,
 }
 
-// make sure to implement this trait on your error type,
-// for better ergonomics
-impl octs::BufError for InvalidPacketError {}
+#[derive(Debug)]
+enum FragmentError {
+    InvalidNumFrags,
+    PayloadTooLarge,
+}
 
-// implement `Decode` to be able to `read` it from a buffer
-impl octs::Decode for PacketBody {
-    // and use your own error type if you want
-    type Error = InvalidPacketError;
+impl Decode for Fragment {
+//   ^^^^^^
+//   | implement this trait to be able to `read`
+//   | this value from a buffer
 
-    fn decode(src: &mut impl Read) -> Result<Self, octs::BufTooShortOr<Self::Error>> {
-        let VarInt(len) = src.read::<VarInt<usize>>()
-            .map_err(|err| err.map_or(InvalidPacketError::LengthTooLarge))?;
-        //  ^^^^^^^^^^^
-        //  | decode VarInts directly from a buffer
-        let payload: octs::Bytes = src.read_next(len)?;
-        //           ^^^^^^^^^^^
-        //           | read the next `len` bytes into a `Bytes`
-        //           | if `src` is also a `Bytes`, this is a zero-copy operation
-        Ok(Self { payload })
+    type Error = FragmentError;
+
+    fn decode(buf: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
+        let num_frags = buf.read::<NonZeroU8>()
+            .map_err(|e| e.map_or(|_| FragmentError::InvalidNumFrags))?;
+        // +--------------^^^^^^^
+        // | map the `Invalidvalue` error of reading
+        // | a `NonZeroU8` to your own error value
+
+        let VarInt(payload_len) = buf.read::<VarInt<usize>>()
+            .map_err(|e| e.map_or(|_| FragmentError::PayloadTooLarge))?;
+
+        let payload = buf.read_next(payload_len)?;
+        // +-------------^^^^^^^^^^
+        // | read the next `payload_len` bytes directly into `Bytes`
+        // | if `buf` is also a `Bytes`, this is zero-copy!
+
+        Ok(Self {
+            num_frags,
+            payload
+        })
     }
 }
 
-// same for `Encode` and `write`
-impl octs::Encode for PacketBody {
-    type Error = core::convert::Infallible;
-
-    fn encode(&self, dst: &mut impl Write) -> Result<(), octs::BufTooShortOr<Self::Error>> {
-        dst.write(VarInt(self.payload.len()))?;
-        dst.write_from(&mut self.payload.chunk())?;
-        Ok(())
-    }
-}
 ```
 
 ## Inspirations

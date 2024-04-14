@@ -84,16 +84,6 @@ pub trait Read: Buf {
     {
         T::decode(self)
     }
-
-    /// Wraps this value so that it can be used as a [`std::io::Read`].
-    #[cfg(feature = "std")]
-    #[inline]
-    fn reader(self) -> crate::std_io::Reader<Self>
-    where
-        Self: Sized,
-    {
-        crate::std_io::Reader::new(self)
-    }
 }
 
 impl<T: Buf> Read for T {}

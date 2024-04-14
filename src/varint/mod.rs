@@ -182,7 +182,7 @@ mod tests {
     #[test]
     fn decode_all_msbs() {
         let len = 64;
-        let mut buf = Bytes::from(vec![0x80; len]);
+        let mut buf = Bytes::from(std::vec![0x80; len]);
         buf.read::<VarInt<u8>>().unwrap_err();
         // make sure it doesn't try to read the entire buffer
         assert_eq!(62, buf.remaining());

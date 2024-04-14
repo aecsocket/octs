@@ -38,16 +38,6 @@ pub trait Write: BufMut {
     {
         value.encode(self)
     }
-
-    /// Wraps this value so that it can be used as a [`std::io::Write`].
-    #[cfg(feature = "std")]
-    #[inline]
-    fn writer(self) -> crate::std_io::Writer<Self>
-    where
-        Self: Sized,
-    {
-        crate::std_io::Writer::new(self)
-    }
 }
 
 impl<T: BufMut> Write for T {}
