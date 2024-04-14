@@ -1,5 +1,6 @@
 use core::{
     convert::Infallible,
+    mem::size_of,
     num::{
         NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize, NonZeroU16, NonZeroU32,
         NonZeroU64, NonZeroU8, NonZeroUsize,
@@ -16,7 +17,7 @@ use super::InvalidValue;
 macro_rules! impl_nz {
     ($nz:ty, $base:ty) => {
         impl FixedEncodeLen for $nz {
-            const ENCODE_LEN: usize = std::mem::size_of::<$base>();
+            const ENCODE_LEN: usize = size_of::<$base>();
         }
 
         impl Decode for $nz {
@@ -58,7 +59,7 @@ impl_nz!(NonZeroI128, i128);
 macro_rules! impl_nz_opt {
     ($nz:ty, $base:ty) => {
         impl FixedEncodeLen for Option<$nz> {
-            const ENCODE_LEN: usize = std::mem::size_of::<$base>();
+            const ENCODE_LEN: usize = size_of::<$base>();
         }
 
         impl Decode for Option<$nz> {

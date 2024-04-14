@@ -1,11 +1,11 @@
-use core::convert::Infallible;
+use core::{convert::Infallible, mem::size_of};
 
 use crate::{BufTooShortOr, Decode, Encode, FixedEncodeLen, Read, Write};
 
 macro_rules! impl_for {
     ($ty:ty) => {
         impl FixedEncodeLen for $ty {
-            const ENCODE_LEN: usize = std::mem::size_of::<$ty>();
+            const ENCODE_LEN: usize = size_of::<$ty>();
         }
 
         impl Decode for $ty {

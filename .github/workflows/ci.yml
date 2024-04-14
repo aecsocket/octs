@@ -31,23 +31,32 @@ jobs:
       - uses: crate-ci/typos@master
   clippy:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        features: ["", "std"]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy
-      - run: cargo clippy --workspace --all-features -- -Dwarnings
+      - run: cargo clippy --workspace --no-default-features --features ${{ matrix.features }} -- -Dwarnings
   doc:
     runs-on: ubuntu-latest
     env:
       RUSTDOCFLAGS: "-Dwarnings"
+    strategy:
+      matrix:
+        features: ["", "std"]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-      - run: cargo doc --workspace --all-features
+      - run: cargo doc --workspace --no-default-features --features ${{ matrix.features }}
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        features: ["", "std"]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-      - run: cargo test --workspace --all-features
+      - run: cargo test --workspace --no-default-features --features ${{ matrix.features }}
