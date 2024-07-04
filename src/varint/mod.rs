@@ -78,6 +78,7 @@ macro_rules! impl_unsigned {
             type Error = Infallible;
 
             #[inline]
+            #[allow(clippy::cast_possible_truncation)]
             fn encode(&self, mut dst: impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
                 let mut n = self.0;
                 while n >= 0x80 {
@@ -108,12 +109,16 @@ macro_rules! impl_signed {
 
         impl VarInt<$ty> {
             #[inline]
+            #[allow(clippy::cast_possible_wrap)]
+            #[allow(clippy::cast_sign_loss)]
             fn zigzag_encode(v: $ty) -> $un {
                 const BITS: u32 = <$ty>::BITS;
                 ((v << 1) ^ (v >> (BITS - 1))) as $un
             }
 
             #[inline]
+            #[allow(clippy::cast_possible_wrap)]
+            #[allow(clippy::cast_sign_loss)]
             fn zigzag_decode(v: $un) -> $ty {
                 ((v >> 1) ^ (-((v & 1) as $ty)) as $un) as $ty
             }
