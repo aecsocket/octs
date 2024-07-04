@@ -100,5 +100,87 @@ pub trait Decode: Sized {
     /// If there are not enough bytes in `src` to read a value of this type,
     /// [`BufTooShortOr::TooShort`] is returned. Otherwise, it is up to the
     /// implementation on what the returned error represents.
-    fn decode(src: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>>;
+    fn decode(src: impl Read) -> Result<Self, BufTooShortOr<Self::Error>>;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn skip() {
+        fn test_with(mut buf: impl Read) {
+            assert_eq!(4, buf.remaining());
+
+            buf.skip(1).unwrap();
+            assert_eq!(3, buf.remaining());
+
+            buf.skip(2).unwrap();
+            assert_eq!(1, buf.remaining());
+
+            buf.skip(2).unwrap_err();
+            assert_eq!(1, buf.remaining());
+
+            buf.skip(1).unwrap();
+            assert_eq!(0, buf.remaining());
+            assert!(!buf.has_remaining());
+        }
+
+        test_with(&[1, 2, 3, 4][..]);
+        test_with(Bytes::from_static(&[1, 2, 3, 4]));
+    }
+
+    #[test]
+    fn read_next() {
+        fn test_with(mut buf: impl Read) {
+            assert_eq!(4, buf.remaining());
+
+            let read = buf.read_next(1).unwrap();
+            assert_eq!(Bytes::from_static(&[1]), read);
+            assert_eq!(3, buf.remaining());
+
+            let read = buf.read_next(2).unwrap();
+            assert_eq!(Bytes::from_static(&[2, 3]), read);
+            assert_eq!(1, buf.remaining());
+
+            buf.read_next(2).unwrap_err();
+            assert_eq!(1, buf.remaining());
+
+            let read = buf.read_next(1).unwrap();
+            assert_eq!(Bytes::from_static(&[4]), read);
+            assert_eq!(0, buf.remaining());
+            assert!(!buf.has_remaining());
+        }
+
+        test_with(&[1, 2, 3, 4][..]);
+        test_with(Bytes::from_static(&[1, 2, 3, 4]));
+    }
+
+    #[test]
+    fn read_exact() {
+        fn test_with(mut buf: impl Read) {
+            assert_eq!(4, buf.remaining());
+
+            assert_eq!([1], buf.read_exact::<1>().unwrap());
+            assert_eq!(3, buf.remaining());
+
+            assert_eq!([2, 3], buf.read_exact::<2>().unwrap());
+            assert_eq!(1, buf.remaining());
+
+            buf.read_exact::<2>().unwrap_err();
+            assert_eq!(1, buf.remaining());
+
+            assert_eq!([4], buf.read_exact::<1>().unwrap());
+            assert_eq!(0, buf.remaining());
+            assert!(!buf.has_remaining());
+        }
+
+        // contiguous
+        test_with(&[1, 2, 3, 4][..]);
+        test_with(Bytes::from_static(&[1, 2, 3, 4]));
+
+        // chained / non-contiguous
+        test_with([1, 2].chain(&[3, 4][..]));
+        test_with(Bytes::from_static(&[1, 2]).chain(Bytes::from_static(&[3, 4])));
+    }
 }

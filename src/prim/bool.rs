@@ -12,7 +12,7 @@ impl Decode for bool {
     type Error = InvalidValue;
 
     #[inline]
-    fn decode(src: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
+    fn decode(mut src: impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
         match src.read_exact::<1>()? {
             [0] => Ok(false),
             [1] => Ok(true),
@@ -25,7 +25,7 @@ impl Encode for bool {
     type Error = Infallible;
 
     #[inline]
-    fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
+    fn encode(&self, mut dst: impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
         dst.write(&u8::from(*self))
     }
 }

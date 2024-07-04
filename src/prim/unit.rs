@@ -9,7 +9,8 @@ impl FixedEncodeLen for () {
 impl Decode for () {
     type Error = Infallible;
 
-    fn decode(_: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
+    #[inline]
+    fn decode(_: impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
         Ok(())
     }
 }
@@ -17,7 +18,8 @@ impl Decode for () {
 impl Encode for () {
     type Error = Infallible;
 
-    fn encode(&self, _: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
+    #[inline]
+    fn encode(&self, _: impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
         Ok(())
     }
 }

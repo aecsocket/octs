@@ -12,7 +12,7 @@ macro_rules! impl_for {
             type Error = Infallible;
 
             #[inline]
-            fn decode(src: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
+            fn decode(mut src: impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
                 Ok(<$ty>::from_be_bytes(src.read_exact()?))
             }
         }
@@ -21,7 +21,7 @@ macro_rules! impl_for {
             type Error = Infallible;
 
             #[inline]
-            fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
+            fn encode(&self, mut dst: impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
                 dst.write_from(&self.to_be_bytes()[..])?;
                 Ok(())
             }

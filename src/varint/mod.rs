@@ -42,6 +42,7 @@ macro_rules! impl_unsigned {
         impl_base!($ty);
 
         impl EncodeLen for VarInt<$ty> {
+            #[inline]
             fn encode_len(&self) -> usize {
                 let mut v = self.0;
                 let mut len = 0;
@@ -57,7 +58,8 @@ macro_rules! impl_unsigned {
         impl Decode for VarInt<$ty> {
             type Error = VarIntTooLarge;
 
-            fn decode(buf: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
+            #[inline]
+            fn decode(mut buf: impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
                 let mut value: $ty = 0;
                 for shift in 0..Self::MAX_ENCODE_LEN {
                     let byte = buf.read::<u8>()?;
@@ -75,7 +77,8 @@ macro_rules! impl_unsigned {
         impl Encode for VarInt<$ty> {
             type Error = Infallible;
 
-            fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
+            #[inline]
+            fn encode(&self, mut dst: impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
                 let mut n = self.0;
                 while n >= 0x80 {
                     let b: u8 = 0b1000_0000 | (n as u8);
@@ -104,17 +107,20 @@ macro_rules! impl_signed {
         impl_base!($ty);
 
         impl VarInt<$ty> {
+            #[inline]
             fn zigzag_encode(v: $ty) -> $un {
                 const BITS: u32 = <$ty>::BITS;
                 ((v << 1) ^ (v >> (BITS - 1))) as $un
             }
 
+            #[inline]
             fn zigzag_decode(v: $un) -> $ty {
                 ((v >> 1) ^ (-((v & 1) as $ty)) as $un) as $ty
             }
         }
 
         impl EncodeLen for VarInt<$ty> {
+            #[inline]
             fn encode_len(&self) -> usize {
                 VarInt(Self::zigzag_encode(self.0)).encode_len()
             }
@@ -123,7 +129,8 @@ macro_rules! impl_signed {
         impl Decode for VarInt<$ty> {
             type Error = VarIntTooLarge;
 
-            fn decode(buf: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
+            #[inline]
+            fn decode(mut buf: impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
                 let VarInt(value) = buf.read::<VarInt<$un>>()?;
                 Ok(VarInt(Self::zigzag_decode(value)))
             }
@@ -132,7 +139,8 @@ macro_rules! impl_signed {
         impl Encode for VarInt<$ty> {
             type Error = Infallible;
 
-            fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
+            #[inline]
+            fn encode(&self, dst: impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
                 VarInt(Self::zigzag_encode(self.0)).encode(dst)
             }
         }

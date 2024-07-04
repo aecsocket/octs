@@ -54,13 +54,14 @@ pub trait Encode {
     /// If there are not enough bytes left for writing into,
     /// [`BufTooShortOr::TooShort`] is returned. Otherwise, it is up to the
     /// implementation on what the returned error represents.
-    fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>>;
+    fn encode(&self, dst: impl Write) -> Result<(), BufTooShortOr<Self::Error>>;
 }
 
 impl<T: Encode + ?Sized> Encode for &T {
     type Error = T::Error;
 
-    fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
+    #[inline]
+    fn encode(&self, dst: impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
         (**self).encode(dst)
     }
 }
@@ -99,6 +100,7 @@ impl<T: FixedEncodeLen> FixedEncodeLenHint for T {
 }
 
 impl<T: FixedEncodeLen> EncodeLen for T {
+    #[inline]
     fn encode_len(&self) -> usize {
         Self::ENCODE_LEN
     }

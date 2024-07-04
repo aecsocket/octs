@@ -24,7 +24,7 @@ macro_rules! impl_nz {
             type Error = InvalidValue;
 
             #[inline]
-            fn decode(src: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
+            fn decode(src: impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
                 let value = <$base>::decode(src)?;
                 <$nz>::new(value).ok_or(InvalidValue(()).into())
             }
@@ -34,7 +34,7 @@ macro_rules! impl_nz {
             type Error = Infallible;
 
             #[inline]
-            fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
+            fn encode(&self, dst: impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
                 self.get().encode(dst)
             }
         }
@@ -66,7 +66,7 @@ macro_rules! impl_nz_opt {
             type Error = Infallible;
 
             #[inline]
-            fn decode(src: &mut impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
+            fn decode(src: impl Read) -> Result<Self, BufTooShortOr<Self::Error>> {
                 let value = <$base>::decode(src)?;
                 Ok(<$nz>::new(value))
             }
@@ -76,7 +76,7 @@ macro_rules! impl_nz_opt {
             type Error = Infallible;
 
             #[inline]
-            fn encode(&self, dst: &mut impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
+            fn encode(&self, dst: impl Write) -> Result<(), BufTooShortOr<Self::Error>> {
                 self.map(<$nz>::get).unwrap_or_default().encode(dst)
             }
         }
