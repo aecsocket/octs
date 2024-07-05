@@ -93,13 +93,13 @@ pub trait FixedEncodeLen {
     const ENCODE_LEN: usize;
 }
 
-impl<T: FixedEncodeLen> FixedEncodeLenHint for T {
+impl<T: FixedEncodeLen + Encode> FixedEncodeLenHint for T {
     const MIN_ENCODE_LEN: usize = Self::ENCODE_LEN;
 
     const MAX_ENCODE_LEN: usize = Self::ENCODE_LEN;
 }
 
-impl<T: FixedEncodeLen> EncodeLen for T {
+impl<T: FixedEncodeLen + Encode> EncodeLen for T {
     #[inline]
     fn encode_len(&self) -> usize {
         Self::ENCODE_LEN
