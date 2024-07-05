@@ -67,7 +67,7 @@ impl<T: Encode + ?Sized> Encode for &T {
 }
 
 /// Gets how many bytes it takes to encode a value of this type.
-pub trait EncodeLen {
+pub trait EncodeLen: Encode {
     /// Gets how many bytes it takes to encode this value into a [`Write`].
     ///
     /// If this function returns `n`, then if you [`Encode::encode`] this value
