@@ -25,6 +25,7 @@ pub(crate) mod __test {
 
     use crate::{Decode, Encode, EncodeLen, FixedEncodeLenHint, Read, Write};
 
+    #[allow(clippy::needless_pass_by_value)]
     pub fn round_trip<T>(value: T)
     where
         T: Debug + Encode + Decode + EncodeLen + FixedEncodeLenHint + PartialEq,
