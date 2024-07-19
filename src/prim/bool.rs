@@ -34,14 +34,16 @@ impl Encode for bool {
 mod tests {
     use super::*;
 
+    use crate::test::*;
+
     #[test]
     fn round_trip_false() {
-        crate::__test::round_trip(false);
+        hint_round_trip(&false);
     }
 
     #[test]
     fn round_trip_true() {
-        crate::__test::round_trip(true);
+        hint_round_trip(&true);
     }
 
     #[test]

@@ -164,31 +164,33 @@ mod tests {
 
     use super::*;
 
+    use crate::test::*;
+
     #[test]
     fn round_trip_all_u8s() {
         for v in 0..u8::MAX {
-            crate::__test::round_trip(VarInt(v));
+            hint_round_trip(&VarInt(v));
         }
     }
 
     #[test]
     fn round_trip_all_i8s() {
         for v in 0..i8::MAX {
-            crate::__test::round_trip(VarInt(v));
+            hint_round_trip(&VarInt(v));
         }
     }
 
     #[test]
     fn round_trip_all_u16s() {
         for v in 0..u16::MAX {
-            crate::__test::round_trip(VarInt(v));
+            hint_round_trip(&VarInt(v));
         }
     }
 
     #[test]
     fn round_trip_all_i16s() {
         for v in 0..i16::MAX {
-            crate::__test::round_trip(VarInt(v));
+            hint_round_trip(&VarInt(v));
         }
     }
 

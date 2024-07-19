@@ -26,8 +26,10 @@ impl Encode for () {
 
 #[cfg(test)]
 mod tests {
+    use crate::test::*;
+
     #[test]
     fn round_trip() {
-        crate::__test::round_trip(());
+        hint_round_trip(&());
     }
 }

@@ -1,7 +1,7 @@
 [package]
 description = "Finally, a good byte manipulation library"
 name = "octs"
-version = "0.4.1"
+version = "0.4.2"
 
 authors = ["aecsocket <aecsocket@tutanota.com>"]
 categories = ["network-programming", "data-structures"]
