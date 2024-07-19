@@ -110,12 +110,14 @@ mod tests {
 
     use super::*;
 
+    use crate::test::*;
+
     macro_rules! round_trip {
         ($nz:ty, $base:ty) => {
-            crate::__test::round_trip(<$nz>::MIN);
-            crate::__test::round_trip(<$nz>::new(1 as $base).unwrap());
-            crate::__test::round_trip(<$nz>::new(2 as $base).unwrap());
-            crate::__test::round_trip(<$nz>::MAX);
+            hint_round_trip(&<$nz>::MIN);
+            hint_round_trip(&<$nz>::new(1 as $base).unwrap());
+            hint_round_trip(&<$nz>::new(2 as $base).unwrap());
+            hint_round_trip(&<$nz>::MAX);
         };
     }
 
@@ -166,11 +168,11 @@ mod tests {
 
     macro_rules! round_trip_opt {
         ($nz:ty, $base:ty) => {
-            crate::__test::round_trip(Some(<$nz>::MIN));
-            crate::__test::round_trip(Option::<$nz>::None);
-            crate::__test::round_trip(Some(<$nz>::new(1 as $base).unwrap()));
-            crate::__test::round_trip(Some(<$nz>::new(2 as $base).unwrap()));
-            crate::__test::round_trip(Some(<$nz>::MAX));
+            hint_round_trip(&Some(<$nz>::MIN));
+            hint_round_trip(&Option::<$nz>::None);
+            hint_round_trip(&Some(<$nz>::new(1 as $base).unwrap()));
+            hint_round_trip(&Some(<$nz>::new(2 as $base).unwrap()));
+            hint_round_trip(&Some(<$nz>::MAX));
         };
     }
 

@@ -49,13 +49,15 @@ impl_for!(f64);
 
 #[cfg(test)]
 mod tests {
+    use crate::test::*;
+
     macro_rules! round_trip {
         ($ty:ty) => {
-            crate::__test::round_trip(<$ty>::MIN);
-            crate::__test::round_trip(0 as $ty);
-            crate::__test::round_trip(1 as $ty);
-            crate::__test::round_trip(2 as $ty);
-            crate::__test::round_trip(<$ty>::MAX);
+            hint_round_trip(&<$ty>::MIN);
+            hint_round_trip(&(0 as $ty));
+            hint_round_trip(&(1 as $ty));
+            hint_round_trip(&(2 as $ty));
+            hint_round_trip(&<$ty>::MAX);
         };
     }
 
@@ -72,9 +74,10 @@ mod tests {
         round_trip!(u64);
         round_trip!(i64);
         #[cfg(feature = "i128")]
-        round_trip!(u128);
-        #[cfg(feature = "i128")]
-        round_trip!(i128);
+        {
+            round_trip!(u128);
+            round_trip!(i128);
+        }
 
         round_trip!(f32);
         round_trip!(f64);
