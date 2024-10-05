@@ -39,9 +39,10 @@ impl_zero_sized!(for PhantomData<T: ?Sized>);
 
 #[cfg(test)]
 mod tests {
-    use core::marker::{PhantomData, PhantomPinned};
-
-    use crate::test::*;
+    use {
+        crate::test::*,
+        core::marker::{PhantomData, PhantomPinned},
+    };
 
     #[test]
     fn round_trip_unit() {
