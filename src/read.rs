@@ -1,6 +1,7 @@
-use bytes::{Buf, Bytes};
-
-use crate::{BufTooShort, BufTooShortOr};
+use {
+    crate::{BufTooShort, BufTooShortOr},
+    bytes::{Buf, Bytes},
+};
 
 /// Allows reading bytes from a buffer.
 ///

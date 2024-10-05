@@ -5,9 +5,10 @@
 //! Use these functions when writing unit tests for your [`Encode`] and
 //! [`Decode`] implementations.
 
-use core::fmt::Debug;
-
-use crate::{Buf, BytesMut, Decode, Encode, EncodeLen, FixedEncodeLenHint, Read, Write};
+use {
+    crate::{Buf, BytesMut, Decode, Encode, EncodeLen, FixedEncodeLenHint, Read, Write},
+    core::fmt::Debug,
+};
 
 /// Asserts that `T`'s [`EncodeLen::encode_len`] is within the bounds of
 /// [`FixedEncodeLenHint`].

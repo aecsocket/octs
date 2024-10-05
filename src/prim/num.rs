@@ -1,6 +1,7 @@
-use core::{convert::Infallible, mem::size_of};
-
-use crate::{BufTooShortOr, Decode, Encode, FixedEncodeLen, Read, Write};
+use {
+    crate::{BufTooShortOr, Decode, Encode, FixedEncodeLen, Read, Write},
+    core::{convert::Infallible, mem::size_of},
+};
 
 macro_rules! impl_for {
     ($ty:ty) => {

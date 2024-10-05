@@ -1,8 +1,6 @@
 //! Allows splitting a byte buffer into non-overlapping chunks of bytes.
 
-use core::iter::FusedIterator;
-
-use bytes::Bytes;
+use {bytes::Bytes, core::iter::FusedIterator};
 
 /// Extension trait on [`Read`] providing [`byte_chunks`].
 ///
@@ -85,7 +83,7 @@ pub struct ByteChunks {
     chunk_len: usize,
 }
 
-// impls copied from std::slice::Chunks
+// impls copied from core::slice::Chunks
 impl Iterator for ByteChunks {
     type Item = Bytes;
 
