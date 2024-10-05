@@ -1,6 +1,7 @@
-use bytes::{Buf, BufMut};
-
-use crate::{BufTooShort, BufTooShortOr};
+use {
+    crate::{BufTooShort, BufTooShortOr},
+    bytes::{Buf, BufMut},
+};
 
 /// Allows writing bytes into a buffer.
 ///

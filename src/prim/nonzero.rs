@@ -1,18 +1,17 @@
-use core::{
-    convert::Infallible,
-    mem::size_of,
-    num::{
-        NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize, NonZeroU16, NonZeroU32,
-        NonZeroU64, NonZeroU8, NonZeroUsize,
-    },
-};
-
 #[cfg(feature = "i128")]
 use core::num::{NonZeroI128, NonZeroU128};
-
-use crate::{BufTooShortOr, Decode, Encode, FixedEncodeLen, Read, Write};
-
-use super::InvalidValue;
+use {
+    super::InvalidValue,
+    crate::{BufTooShortOr, Decode, Encode, FixedEncodeLen, Read, Write},
+    core::{
+        convert::Infallible,
+        mem::size_of,
+        num::{
+            NonZeroI8, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroIsize, NonZeroU8, NonZeroU16,
+            NonZeroU32, NonZeroU64, NonZeroUsize,
+        },
+    },
+};
 
 macro_rules! impl_nz {
     ($nz:ty, $base:ty) => {
@@ -100,17 +99,16 @@ impl_nz_opt!(NonZeroI128, i128);
 
 #[cfg(test)]
 mod tests {
-    use core::num::{
-        NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize, NonZeroU16, NonZeroU32,
-        NonZeroU64, NonZeroU8, NonZeroUsize,
-    };
-
     #[cfg(feature = "i128")]
     use core::num::{NonZeroI128, NonZeroU128};
-
-    use super::*;
-
-    use crate::test::*;
+    use {
+        super::*,
+        crate::test::*,
+        core::num::{
+            NonZeroI8, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroIsize, NonZeroU8, NonZeroU16,
+            NonZeroU32, NonZeroU64, NonZeroUsize,
+        },
+    };
 
     macro_rules! round_trip {
         ($nz:ty, $base:ty) => {

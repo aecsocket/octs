@@ -15,7 +15,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rustfmt
-      - run: cargo fmt --check
+      - run: cargo +nightly fmt --check
   taplo:
     runs-on: ubuntu-latest
     steps:
@@ -42,11 +42,11 @@ jobs:
       - run: cargo clippy --workspace --no-default-features --features '${{ matrix.features }}' -- -Dwarnings
   doc:
     runs-on: ubuntu-latest
-    env:
-      RUSTDOCFLAGS: "-Dwarnings"
     strategy:
       matrix:
         features: ["", "std"]
+    env:
+      RUSTDOCFLAGS: "-Dwarnings"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly

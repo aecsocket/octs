@@ -1,6 +1,7 @@
-use core::fmt::Display;
-
-use crate::BufError;
+use {
+    crate::BufError,
+    core::{error::Error, fmt::Display},
+};
 
 /// Attempted to read a [`VarInt`] from a buffer, but the resulting integer
 /// would have been too large to fit into this [`VarInt`].
@@ -23,5 +24,4 @@ impl Display for VarIntTooLarge {
 
 impl BufError for VarIntTooLarge {}
 
-#[cfg(feature = "std")]
-impl std::error::Error for VarIntTooLarge {}
+impl Error for VarIntTooLarge {}

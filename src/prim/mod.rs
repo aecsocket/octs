@@ -7,6 +7,6 @@ mod bool;
 mod error;
 mod nonzero;
 mod num;
-mod unit;
+mod zero_sized;
 
 pub use error::*;

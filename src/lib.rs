@@ -2,9 +2,6 @@
 #![doc = include_str!("../README.md")]
 #![no_std]
 
-#[cfg(feature = "std")]
-extern crate std;
-
 pub use bytes::{self, Buf, BufMut, Bytes, BytesMut};
 
 mod error;

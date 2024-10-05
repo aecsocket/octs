@@ -1,4 +1,4 @@
-use core::{convert::Infallible, fmt::Display};
+use core::{convert::Infallible, error::Error, fmt::Display};
 
 /// Performed an operation on a [`Read`] or [`Write`] which required more bytes
 /// available than were actually available.
@@ -24,8 +24,7 @@ impl Display for BufTooShort {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for BufTooShort {}
+impl Error for BufTooShort {}
 
 /// Error which may represent either a [`BufTooShort`] or some other
 /// user-specified error type.
@@ -59,9 +58,8 @@ impl<E: Display> Display for BufTooShortOr<E> {
     }
 }
 
-#[cfg(feature = "std")]
-impl<E: std::error::Error + 'static> std::error::Error for BufTooShortOr<E> {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+impl<E: Error + 'static> Error for BufTooShortOr<E> {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::TooShort => None,
             Self::Or(err) => Some(err),

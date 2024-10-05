@@ -1,6 +1,7 @@
-use core::{convert::Infallible, mem::size_of};
-
-use crate::{BufTooShortOr, Decode, Encode, EncodeLen, FixedEncodeLenHint, Read, Write};
+use {
+    crate::{BufTooShortOr, Decode, Encode, EncodeLen, FixedEncodeLenHint, Read, Write},
+    core::{convert::Infallible, mem::size_of},
+};
 
 mod error;
 
@@ -111,7 +112,7 @@ macro_rules! impl_signed {
             #[inline]
             #[allow(clippy::cast_possible_wrap)]
             #[allow(clippy::cast_sign_loss)]
-            fn zigzag_encode(v: $ty) -> $un {
+            const fn zigzag_encode(v: $ty) -> $un {
                 const BITS: u32 = <$ty>::BITS;
                 ((v << 1) ^ (v >> (BITS - 1))) as $un
             }
@@ -119,7 +120,7 @@ macro_rules! impl_signed {
             #[inline]
             #[allow(clippy::cast_possible_wrap)]
             #[allow(clippy::cast_sign_loss)]
-            fn zigzag_decode(v: $un) -> $ty {
+            const fn zigzag_decode(v: $un) -> $ty {
                 ((v >> 1) ^ (-((v & 1) as $ty)) as $un) as $ty
             }
         }
@@ -160,11 +161,7 @@ impl_signed!(i64, u64);
 
 #[cfg(test)]
 mod tests {
-    use bytes::Buf;
-
-    use super::*;
-
-    use crate::test::*;
+    use {super::*, crate::test::*, bytes::Buf};
 
     #[test]
     fn round_trip_all_u8s() {

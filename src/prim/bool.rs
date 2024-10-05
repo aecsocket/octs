@@ -1,8 +1,8 @@
-use core::convert::Infallible;
-
-use crate::{BufTooShortOr, Decode, Encode, FixedEncodeLen, Read, Write};
-
-use super::InvalidValue;
+use {
+    super::InvalidValue,
+    crate::{BufTooShortOr, Decode, Encode, FixedEncodeLen, Read, Write},
+    core::convert::Infallible,
+};
 
 impl FixedEncodeLen for bool {
     const ENCODE_LEN: usize = 1;
@@ -32,9 +32,7 @@ impl Encode for bool {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    use crate::test::*;
+    use {super::*, crate::test::*};
 
     #[test]
     fn round_trip_false() {
